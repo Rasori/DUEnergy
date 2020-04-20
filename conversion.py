@@ -9,14 +9,12 @@ def convert(csvfile, conn):
                            dtype={'Aikaväli': str, 'Kulutus': float, 'Lämpötila': float}).fillna(value=0)
 
     daytime = data['Aikaväli'].str.split(' ', n=1, expand=True)  # Split daytime cell to time and date
-    daytime[0] = daytime[0]+year(csvfile)  # Add year to date
-    daytime[0] = pandas.to_datetime(daytime[0])  # Reformatting date
+    daytime[0] = daytime[0]+year(csvfile)+' '+daytime[1]  # Add year to date
+    daytime[0] = pandas.to_datetime(daytime[0].astype(str), format='%d.%m.%Y %H:%M:%S')  # Reformatting date
 
-    data['Time'] = daytime[1]  # Updating dataframe
-    data['Date'] = daytime[0]
-    data = data.drop(columns=['Aikaväli'])
-    data = data.reindex(columns=['Date', 'Time', 'Kulutus', 'Lämpötila'])
+    data['Aikaväli'] = daytime[0]  # Updating the dataframe
 
+    data = data.reindex(columns=['Aikaväli', 'Kulutus', 'Lämpötila'])
     data.to_sql("Energy", conn, index=False, if_exists='replace')  # Saving to SQL
 
 
@@ -42,12 +40,12 @@ def main(csvfile, db_file):
         convert(csvfile, conn)
     except Error as e:
         print(e)
-        return
+        return e
 
     conn.close()
 
 
-if __name__ == '__main__':
+def update():
     csvfile = f"{Path(__file__).parent.resolve()}/test-data/consumption_20200224_20210101.csv"
     db_file = f"{Path(__file__).parent.resolve()}/db/energy_consumption.db"
     main(csvfile, db_file)
