@@ -41,14 +41,8 @@ def change_features():
     return graphJSON
 
 
-def connect_db(db_file):
-    try:
-        conn = sqlite3.connect(db_file)
-        return conn
-    except Error as e:
-        print(e)
-        raise Error
+
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0', port=8000)
