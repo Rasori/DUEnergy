@@ -2,6 +2,7 @@ import sqlite3
 from _sqlite3 import Error
 from pathlib import Path
 import pandas
+import data_manipulation as dm
 
 
 def convert(csvfile, conn):
@@ -30,11 +31,8 @@ def year(filename):
 
 
 def main(csvfile, db_file):
-    try:
-        conn = sqlite3.connect(db_file)
-    except Error as e:
-        print(e)
-        return
+
+    conn = dm.connect_db(db_file)
 
     try:
         convert(csvfile, conn)
