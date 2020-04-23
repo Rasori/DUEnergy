@@ -11,7 +11,7 @@ def convert(csvfile, conn):
 
     daytime = data['Aikaväli'].str.split(' ', n=1, expand=True)  # Split daytime cell to time and date
     daytime[0] = daytime[0]+year(csvfile)+' '+daytime[1]  # Add year to date
-    daytime[0] = pandas.to_datetime(daytime[0].astype(str), format='%d.%m.%Y %H:%M:%S')  # Reformatting date
+    daytime[0] = pandas.to_datetime(daytime[0].astype(str), format='%Y-%m-%d %H:%M:%S')  # Reformatting date
 
     data['Aikaväli'] = daytime[0]  # Updating the dataframe
 
