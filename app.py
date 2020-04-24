@@ -34,6 +34,10 @@ def form_graph(resolution, d=0, timeframe=None):
                     f"strftime('{timestring.get(resolution)}',Aikaväli) as TimeFrame, SUM(Kulutus) as Consumption "
                     f"FROM 'Energy' WHERE Kulutus > 0 AND '{end}' >= Aikaväli AND '{begin}' <= Aikaväli GROUP  BY TimeFrame")
 
+    if resolution == 'Weekday':  # If Weekdays are set as a resolution x-axis values are replaced with weekdays' names
+        weekday = {'0': 'Sunday', '1': 'Monday', '2': 'Tuesday', '3': 'Wednesday', '4': 'Thursday', '5': 'Friday', '6': 'Saturday'}
+        df['TimeFrame'] = df['TimeFrame'].replace(to_replace=weekday, value=None)
+
     figure = {
         'data': [{'x': df['TimeFrame'], 'y': df['Consumption'], 'type': 'bar', 'name': 'SF'}],
         'layout': {
