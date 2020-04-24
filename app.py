@@ -27,7 +27,7 @@ def form_graph(resolution, d=0, timeframe=None):
         begin = (end - dt.timedelta(days=d)).strftime('%Y-%m-%d')
 
     # resolution parameter is searched from timestring
-    timestring = {'Hour': '%Y-%m-%dT%H:00', 'Weekday': '%w', 'Day': '%Y-%m-%d', 'Week': '%Y/%W', 'Month': '%Y-%m', 'Year': '%Y'}
+    timestring = {'Hour': '%Y-%m-%dT%H:00', 'Day hours': '%H', 'Weekday': '%w', 'Day': '%Y-%m-%d', 'Week': '%Y/%W', 'Month': '%Y-%m', 'Year': '%Y'}
 
     df = dataparser(f"{Path(__file__).parent.resolve()}/db/energy_consumption.db",
                     f"SELECT "
@@ -82,6 +82,7 @@ def main():
                 dcc.RadioItems(id='Resolution',
                     options=[
                         {'label': 'Weekdays', 'value': 'Weekday'},
+                        {'label': 'Day hours', 'value': 'Day hours'},
                         {'label': 'Hourly', 'value': 'Hour'},
                         {'label': 'Daily', 'value': 'Day'},
                         {'label': 'Weekly', 'value': 'Week'},
