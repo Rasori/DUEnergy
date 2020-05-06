@@ -15,15 +15,14 @@ def form_maingraph(resolution, temperature=False):
     """
     Forms the main graph for the main page.
 
-    :param resolution: Units of x-axis as str(Weekday, Hour, Day, Week, Month, Year)
+    :param resolution: Units of x-axis as str( Hour, Day, Week, Month, Year)
     :param temperature: Boolean argument stating whether or not to show temperature trace
-    :return: Figure data and styling as a dict
+    :return: Figure data and layout as a dict
     """
 
 
     # resolution parameter is searched from timestring
     timestring = {'Hour': '%Y-%m-%dT%H:00',
-                  #'Day hours': '%H',
                   'Day': '%Y-%m-%d',
                   'Week': '%Y-W%W',
                   'Month': '%Y-%m',
@@ -39,17 +38,6 @@ def form_maingraph(resolution, temperature=False):
                     f"strftime('{timestring.get('Day')}',Aikaväli) as Date, SUM(Lämpötila) as Temperature "
                     f"From 'Energy' GROUP  BY Date")
 
-    if resolution == 'Weekday':  # If Weekdays are set as a resolution x-axis values are replaced with weekdays' names
-        weekday = {'0': 'Sunday',
-                   '1': 'Monday',
-                   '2': 'Tuesday',
-                   '3': 'Wednesday',
-                   '4': 'Thursday',
-                   '5': 'Friday',
-                   '6': 'Saturday'}
-
-        df['Date'] = df['Date'].replace(to_replace=weekday, value=None)
-
     figure = {
         'data': [{
             'x': df['Date'],
@@ -58,6 +46,7 @@ def form_maingraph(resolution, temperature=False):
             'name': 'Consumption'}],
         'layout': {
             'title': 'Your energy consumption',
+            'dragmode': 'pan',  # Sets pan as a default tool
             'clickmode': 'event',
             'uirevision': 'no reset of zoom',
             'xaxis': {'title': 'Date',
@@ -98,30 +87,34 @@ def form_maingraph(resolution, temperature=False):
     return figure
 
 
-def form_weekdaygraph():
+def form_secondarygraph(type):
     """
-    Forms the weekday graph for the main page.
+    Forms the secondary graphs for the main page.
 
-    :return: Figure data and styling as a dict
+    :param type: A str describing the type of the graph (weekday or dayhours)
+    :return: Figure data and layout as a dict
     """
+
+    settings = {'weekday': dict(timestring='%w', factor=24, title='days of the week'),
+                'dayhours': dict(timestring='%H', factor=1, title='hours of the day')}
 
     df = dataparser(f"{Path(__file__).parent.resolve()}/db/energy_consumption.db", f"SELECT "
-                                                                                   f"strftime('%w',Aikaväli) as Date, "
-                                                                                   f"AVG(Kulutus)*24 as Consumption "
+                                                                                   f"strftime('{settings[type]['timestring']}',Aikaväli) as Date, "
+                                                                                   f"AVG(Kulutus)*{settings[type]['factor']} as Consumption "
                                                                                    f"FROM 'Energy' "
                                                                                    f"WHERE Kulutus > 0 "
                                                                                    f"GROUP  BY Date")
 
-    # x-axis values are replaced with weekdays' names
-    weekday = {'0': 'Sunday',
-               '1': 'Monday',
-               '2': 'Tuesday',
-               '3': 'Wednesday',
-               '4': 'Thursday',
-               '5': 'Friday',
-               '6': 'Saturday'}
+    if type == 'weekday':  # If Weekdays are set as a type, The x-axis values are replaced with weekdays' names
+        weekday = {'0': 'Sunday',
+                   '1': 'Monday',
+                   '2': 'Tuesday',
+                   '3': 'Wednesday',
+                   '4': 'Thursday',
+                   '5': 'Friday',
+                   '6': 'Saturday'}
 
-    df['Date'] = df['Date'].replace(to_replace=weekday, value=None)
+        df['Date'] = df['Date'].replace(to_replace=weekday, value=None)
 
     figure = {
         'data': [{
@@ -130,8 +123,8 @@ def form_weekdaygraph():
             'type': 'bar',
             'name': 'Consumption'}],
         'layout': {
-            'title': 'Average energy consumption through the week',
-            'xaxis': {'title': 'Weekday'},
+            'title': f"Average energy consumption through the {settings[type]['title']}",
+            'xaxis': {'title': 'Weekday', 'fixedrange': True},
             'yaxis': {'title': 'Consumption [kWh]',
                       'fixedrange': True}}}  # Locks the y-axis from zooming
 
@@ -148,23 +141,25 @@ def main():
     app.layout = html.Div(children=[  # Main frame
         html.Div(children=[
                 html.H1(children='DUEnergy', style={'textAlign': 'center'}),
-                html.H3('For those that are interested in their energy consumption habits', style={'textAlign': 'center'})]),
+                html.H3('For those that are interested in their energy consumption habits', style={'textAlign': 'center'})
+        ]),
 
         html.Div(children=[
-            html.Div(children=[dcc.Graph(id='main-graph', figure=form_maingraph('Day'))], className='nine columns'),
+            html.Div(children=[dcc.Graph(id='main-graph', figure=form_maingraph('Day'))], className='ten columns'),
 
             html.Div(children=[html.Label('Additional options:'),
-                               dcc.Checklist(id='Options', options=[{'label': 'Show temperature', 'value': 'Temp'}],
-                                             value=[])], className="three columns")]),
+                               dcc.Checklist(id='Options', options=[{'label': 'Show temperature', 'value': 'Temp'}], value=[])],
+                     className="two columns")]),
 
-        html.Div(children=[html.Div(children=[dcc.Graph(id='weekday-graph', figure=form_weekdaygraph())], className='five columns')], className="row")
+        html.Div(children=[html.Div(children=[dcc.Graph(id='weekday-graph', figure=form_secondarygraph('weekday'))], className='five columns'),
+                           html.Div(children=[dcc.Graph(id='dayhour-graph', figure=form_secondarygraph('dayhours'))], className='seven columns')],
+                 className="row")
     ])
 
     @app.callback(  # Main Graph update callback
         Output('main-graph', 'figure'),
         [Input('Options', 'value'), Input('main-graph', 'relayoutData')])
     def update_graph(options, relayoutData):
-
 
         if 'Temp' in options:  # Sets temperature plotting True if check box is checked
             temperature = True
@@ -184,7 +179,6 @@ def main():
                         except ValueError:
                             continue
                 timeframe = frame[1] - frame[0]
-                print(timeframe)
 
                 if timeframe.days > 390:
                     resolution = 'Year'
