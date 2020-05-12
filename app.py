@@ -91,12 +91,12 @@ def form_secondarygraph(type):
     """
     Forms the secondary graphs for the main page.
 
-    :param type: A str describing the type of the graph (weekday or dayhours)
+    :param type: A str describing the type of the graph (Weekday or Day hours)
     :return: Figure data and layout as a dict
     """
 
-    settings = {'weekday': dict(timestring='%w', factor=24, title='days of the week'),
-                'dayhours': dict(timestring='%H', factor=1, title='hours of the day')}
+    settings = {'Weekday': dict(timestring='%w', factor=24, title='days of the week'),
+                'Day hours': dict(timestring='%H', factor=1, title='hours of the day')}
 
     df = dataparser(f"{Path(__file__).parent.resolve()}/db/energy_consumption.db", f"SELECT "
                                                                                    f"strftime('{settings[type]['timestring']}',Aikaväli) as Date, "
@@ -124,7 +124,7 @@ def form_secondarygraph(type):
             'name': 'Consumption'}],
         'layout': {
             'title': f"Average energy consumption through the {settings[type]['title']}",
-            'xaxis': {'title': 'Weekday', 'fixedrange': True},
+            'xaxis': {'title': type, 'fixedrange': True},
             'yaxis': {'title': 'Consumption [kWh]',
                       'fixedrange': True}}}  # Locks the y-axis from zooming
 
@@ -151,8 +151,8 @@ def main():
                                dcc.Checklist(id='Options', options=[{'label': 'Show temperature', 'value': 'Temp'}], value=[])],
                      className="two columns")]),
 
-        html.Div(children=[html.Div(children=[dcc.Graph(id='weekday-graph', figure=form_secondarygraph('weekday'))], className='five columns'),
-                           html.Div(children=[dcc.Graph(id='dayhour-graph', figure=form_secondarygraph('dayhours'))], className='seven columns')],
+        html.Div(children=[html.Div(children=[dcc.Graph(id='weekday-graph', figure=form_secondarygraph('Weekday'))], className='five columns'),
+                           html.Div(children=[dcc.Graph(id='dayhour-graph', figure=form_secondarygraph('Day hours'))], className='seven columns')],
                  className="row")
     ])
 
