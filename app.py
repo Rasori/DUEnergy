@@ -124,7 +124,7 @@ def form_secondarygraph(type):
             'type': 'bar',
             'name': 'Consumption'}],
         'layout': {
-            'title': f"Average energy consumption through the {settings[type]['title']}",
+            'title': f"Average consumption through <br> the {settings[type]['title']}",
             'xaxis': {'title': type, 'fixedrange': True},
             'yaxis': {'title': 'Consumption [kWh]',
                       'fixedrange': True}}}  # Locks the y-axis from zooming
